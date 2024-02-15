@@ -1,6 +1,6 @@
 #imports
 import socket
-import threading
+# import threading
 # import cv2
 # import pickle
 # import imutils
@@ -13,26 +13,16 @@ HOST_IP = socket.gethostbyname(HOST)
 PORT = 8080
 ADDR = (HOST_IP,PORT)
 FORMAT = "utf-8"
-PAYLOAD_SIZE = 1024
-THREAD_COUNT = -1
-MAX_THREADS = 5
-
-
-def handle_client(server):
-    while True:
-        data,addr = server.recvfrom(PAYLOAD_SIZE)
-        if not data:
-            print("[DISCONNECTED] Client Disconnected")
-            break
-        else:
-            print(f"Received messages from {addr}:{data}")
-
+PAYLOAD_SIZE = struct.calcsize("Q")#Q is format for long long int btw --> 8 bytes on most platforms
+# THREAD_COUNT = 0
+# MAX_THREADS = 5
+MAX_CONNECTIONS =  5
 
 #server
 def start_server():
     global THREAD_COUNT
     
-    server = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
     print(f"[SERVER]\nHOST:{HOST}\nHOST IP:{HOST_IP}\n\n")
     
     try:
@@ -41,44 +31,33 @@ def start_server():
     except socket.error as err:
         print(str(err))
     
+    print("[WAITING] Waiting for New Connections ...\n")
+    print(f"[LISTENING] on PORT NO:{PORT}\n")
     
-
-    thread = threading.Thread(target=handle_client, args=(server,))
-    thread.start()
-    print(f"[ACTIVE THREADS]: {THREAD_COUNT}")
-        
-
-
-
-# def thread_clients(server):
-#     global THREAD_COUNT
+    client_data = {}
+    connection_count =  0
     
-#     while True:
-#         conn,addr = server.accept()
-#         THREAD_COUNT+=1
-#         if THREAD_COUNT >= MAX_THREADS:
-#             print("[LIMIT] Maximum Number of Clients reached! Closing connection ...\n")
-#             conn.close()
-#             continue
-        
-#         # THREAD_COUNT+=1
-#         # print(f"[ACTIVE THREADS]:{THREAD_COUNT}")
+    while True:
+        data, addr = server.recvfrom(PAYLOAD_SIZE)
+        if not data:
+            break
 
-#         try:
-#             while True:
-#                 data = conn.recv(PAYLOAD_SIZE)
-#                 if not data:
-#                     break
-                
+        if connection_count >= MAX_CONNECTIONS:
+            print(f"[LIMIT REACHED] Maximum number of connections ({MAX_CONNECTIONS}) reached.")
+            continue
         
-#         except socket.error as err:
-#             print(f"[EXCEPTION] {err}")
+        if addr not in client_data:
+            connection_count += 1
+            print(f"[NEW CONNECTION] from {addr}.\n")
+            client_data[addr] = []
+        client_data[addr].append(data)
+
+        print(f"Received message: {data} from {addr}")
         
-#         finally:
-#             THREAD_COUNT-=1
-#             conn.close()
-#             print(f"[DISCONNECTED] Client Disconnected.\n[ACTIVE THREADS]:{THREAD_COUNT}")
+        for client_addr, client_messages in client_data.items():
+                for message in client_messages:
+                    server.sendto(message, client_addr)
 
 
-        
+       
 start_server()

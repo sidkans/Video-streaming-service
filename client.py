@@ -20,8 +20,8 @@ def run_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print(f"[SERVER]\nHOST IP:{HOST_IP}\n\n")
     
-    # cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    cam = cv2.VideoCapture("./JigsAcademyTesting.mp4")
+    cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    # cam = cv2.VideoCapture("./JigsAcademyTesting.mp4")
     print(f"[CAMERA] Turning on Camera...",end= ' ')
 
     if cam.isOpened():
@@ -47,7 +47,7 @@ def run_client():
                         packet = serialized_frames[start:end]
                         packet_encoded = struct.pack('!L',i)+packet
                         client.sendto(packet_encoded,ADDR)
-                    # print("Sending frames") #success!!!!
+                    print("Sending frames") #success!!!!
         finally:
             # Release the camera and destroy all windows here
             cam.release()
