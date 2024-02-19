@@ -21,6 +21,7 @@ MAX_CONNECTIONS =  5
 
 #accept gracious termination
 
+
 #server
 def start_server():
     # global THREAD_COUNT
@@ -33,18 +34,40 @@ def start_server():
         print("[BIND] Success!\n")
     except socket.error as err:
         print(str(err))
+        return
     
     print("[WAITING] Waiting for New Connections ...\n")
     print(f"[LISTENING] on PORT NO:{PORT}\n")
     
     client_data = {}
     connection_count =  0
-    
+    client_connections = {}
+
     while True:
-        data, addr = server.recvfrom(PAYLOAD_SIZE)
-        if not data:
-            server.close()
+        try:
+            data, addr = server.recvfrom(PAYLOAD_SIZE)
+        except ConnectionResetError:
+            print(f"[CONNECTION RESET] {addr} has disconnected.")
+            continue
         
+        if not data:
+            # Client has disconnected
+            if addr in client_connections and client_connections[addr]:
+                client_connections[addr] = False
+                print(f"[DISCONNECTED] {addr} has disconnected.")
+                connection_count -= 1
+            continue
+        
+        
+        if addr not in client_connections:
+            client_connections[addr] = True
+            connection_count += 1
+        elif client_connections.get(addr, False) == False:
+            print(f"[RECONNECTED] {addr} has reconnected.")
+            client_connections[addr] = True
+            connection_count += 1
+            
+            
         #deserealizing frames
         packet_init = struct.unpack("!L",data[0:4])[0]
         packet_decoded = data[4:]
@@ -65,18 +88,17 @@ def start_server():
             continue
         
         if addr not in client_data:
-            connection_count += 1
             print(f"[NEW CONNECTION] from {addr}.\n")
             client_data[addr] = []
+            client_connections[addr] = True
         client_data[addr].append(data)
 
         print(f"Received message: {data} from {addr}")
-        # time.sleep(1)
         
+
         for client_addr, client_messages in client_data.items():
+            if client_connections.get(client_addr, False):
                 for message in client_messages:
                     server.sendto(message, client_addr)
-
-
        
 start_server()

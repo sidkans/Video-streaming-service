@@ -6,7 +6,7 @@ import struct
 import numpy as np
 
 #constants
-HOST_IP = "192.168.68.105"
+HOST_IP = "192.168.0.105"
 CLIENT_NAME = socket.gethostname()
 PORT = 8080
 ADDR = (HOST_IP,PORT)
@@ -16,13 +16,26 @@ HEIGHT = 400
 PAYLOAD_SIZE = 1024
 
 
+
+# Client
+def close_client_socket(client_socket):
+    try:
+        # Send a termination message to the server
+        client_socket.sendto(b'', ADDR)
+    except socket.error as err:
+        print(f"[ERROR] Failed to send termination message: {err}")
+    finally:
+        # Close the socket
+        client_socket.close()
+
+
 # client
 def run_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print(f"[CLIENT]\nHOST IP:{HOST_IP}\n\n")
 
     print(f"[CAMERA] Turning on Camera...", end=' ') 
-    cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cam = cv2.VideoCapture("skely.mp4")
     
 
     try:
@@ -56,7 +69,7 @@ def run_client():
         cam.release()
         cv2.destroyAllWindows()
 
-    client.close()
+    close_client_socket(client)
 
 run_client()
 
