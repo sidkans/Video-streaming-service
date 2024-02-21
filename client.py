@@ -6,7 +6,7 @@ import struct
 import numpy as np
 
 #constants
-HOST_IP = "192.168.0.105"
+HOST_IP = "10.1.1.151"
 CLIENT_NAME = socket.gethostname()
 PORT = 8080
 ADDR = (HOST_IP,PORT)
@@ -35,34 +35,44 @@ def run_client():
     print(f"[CLIENT]\nHOST IP:{HOST_IP}\n\n")
 
     print(f"[CAMERA] Turning on Camera...", end=' ') 
-    cam = cv2.VideoCapture("skely.mp4")
+    cam = cv2.VideoCapture(0)
     
 
     try:
+        '''
+        # while cam.isOpened():
+        #     # print("SUCCESS!")
+        #     ret, frame = cam.read()
+        #     if not ret:
+        #         break
+            
+        #     cv2.imshow(f'{CLIENT_NAME}', frame)
+        #     frame = cv2.resize(frame, (WIDTH, HEIGHT))
+        #     key = cv2.waitKey(20) & 0xFF
+        #     if key == ord('Q') or key == 27:
+        #         break
+
+        #     # Serialization of frames first
+        #     serialized_frames = pickle.dumps(frame)
+        #     frame_size = len(serialized_frames)
+        #     packet_count = int(np.ceil(frame_size / PAYLOAD_SIZE))
+
+        #     for i in range(packet_count):
+        #         start = i * PAYLOAD_SIZE
+        #         end = min((i + 1) * PAYLOAD_SIZE, frame_size)
+        #         packet = serialized_frames[start:end]
+        #         packet_encoded = struct.pack('!L', i) + packet
+        #         client.sendto(packet_encoded, ADDR)
+        #         # print("Sending frames")  # success!!!!'''
         while cam.isOpened():
-            # print("SUCCESS!")
-            ret, frame = cam.read()
-            if not ret:
+            ret,photo = cam.read()
+            cv2.imshow('name',photo)
+            ret, buffer= cv2.imencode(".jpg",photo,[int(cv2.IMWRITE_JPEG_QUALITY),30])
+            x_bytes = pickle.dumps(buffer)
+            client.sendto(x_bytes,ADDR)
+            if cv2.waitKey(10) == 13:
                 break
-
-            cv2.imshow(f'{CLIENT_NAME}', frame)
-            frame = cv2.resize(frame, (WIDTH, HEIGHT))
-            key = cv2.waitKey(20) & 0xFF
-            if key == ord('Q') or key == 27:
-                break
-
-            # Serialization of frames first
-            serialized_frames = pickle.dumps(frame)
-            frame_size = len(serialized_frames)
-            packet_count = int(np.ceil(frame_size / PAYLOAD_SIZE))
-
-            for i in range(packet_count):
-                start = i * PAYLOAD_SIZE
-                end = min((i + 1) * PAYLOAD_SIZE, frame_size)
-                packet = serialized_frames[start:end]
-                packet_encoded = struct.pack('!L', i) + packet
-                client.sendto(packet_encoded, ADDR)
-                # print("Sending frames")  # success!!!!
+            pass
 
     finally:
         # Release the camera and destroy all windows here
