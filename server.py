@@ -44,61 +44,73 @@ def start_server():
     client_connections = {}
 
     while True:
-        try:
-            data, addr = server.recvfrom(PAYLOAD_SIZE)
-        except ConnectionResetError:
-            print(f"[CONNECTION RESET] {addr} has disconnected.")
-            continue
+        '''# try:
+        #     data, addr = server.recvfrom(PAYLOAD_SIZE)
+        # except ConnectionResetError:
+        #     # print(f"[CONNECTION RESET] {addr} has disconnected.")
+        #     print("No of connections:",connection_count)
+            
         
-        if not data:
-            # Client has disconnected
-            if addr in client_connections and client_connections[addr]:
-                client_connections[addr] = False
-                print(f"[DISCONNECTED] {addr} has disconnected.")
-                connection_count -= 1
-            continue
+        # if not data:
+        #     # Client has disconnected
+        #     if addr in client_connections and client_connections[addr]:
+        #         client_connections[addr] = False
+        #         # print(f"[DISCONNECTED] {addr} has disconnected.")
+        #         connection_count -= 1
+        #     continue
         
         
-        if addr not in client_connections:
-            client_connections[addr] = True
-            connection_count += 1
-        elif client_connections.get(addr, False) == False:
-            print(f"[RECONNECTED] {addr} has reconnected.")
-            client_connections[addr] = True
-            connection_count += 1
+        # if addr not in client_connections:
+        #     client_connections[addr] = True
+        #     connection_count += 1
+        # elif client_connections.get(addr, False) == False:
+        #     print(f"[RECONNECTED] {addr} has reconnected.")
+        #     client_connections[addr] = True
+        #     connection_count += 1
             
             
-        #deserealizing frames
-        packet_init = struct.unpack("!L",data[0:4])[0]
-        packet_decoded = data[4:]
-        if packet_init ==0:
-            frame = packet_decoded
-        else:
-            frame+=packet_decoded
-        try:
-            if packet_init ==0 or len(frame) == PAYLOAD_SIZE:
-                frame = pickle.loads(frame)
-                cv2.imshow("Receiving",frame)
-                cv2.waitKey(20)
-        except pickle.UnpicklingError as err:
-            print(f"Unable to deserealize frame:{err}")        
+        # #deserealizing frames
+        # packet_init = struct.unpack("!L",data[0:4])[0]
+        # packet_decoded = data[4:]
+        # if packet_init ==0:
+        #     frame = packet_decoded
+        # else:
+        #     frame+=packet_decoded
+        # try:
+        #     if packet_init ==0 or len(frame) == PAYLOAD_SIZE:
+        #         frame = pickle.loads(frame)
+        #         frame = cv2.imdecode(frame,cv2.IMREAD_COLOR)
+        #         cv2.imshow("Receiving",frame)
+        #         cv2.waitKey(20)
+        # except pickle.UnpicklingError as err:
+        #     # print(f"Unable to deserealize frame:{err}")
+        #     pass
 
-        if connection_count >= MAX_CONNECTIONS:
-            print(f"[LIMIT REACHED] Maximum number of connections ({MAX_CONNECTIONS}) reached.")
-            continue
+        # if connection_count >= MAX_CONNECTIONS:
+        #     print(f"[LIMIT REACHED] Maximum number of connections ({MAX_CONNECTIONS}) reached.")
+        #     continue
         
-        if addr not in client_data:
-            print(f"[NEW CONNECTION] from {addr}.\n")
-            client_data[addr] = []
-            client_connections[addr] = True
-        client_data[addr].append(data)
+        # if addr not in client_data:
+        #     print(f"[NEW CONNECTION] from {addr}.\n")
+        #     client_data[addr] = []
+        #     client_connections[addr] = True
+        # client_data[addr].append(data)
 
-        print(f"Received message: {data} from {addr}")
+        # # print(f"Received message: {data} from {addr}")
         
 
-        for client_addr, client_messages in client_data.items():
-            if client_connections.get(client_addr, False):
-                for message in client_messages:
-                    server.sendto(message, client_addr)
-       
+        # for client_addr, client_messages in client_data.items():
+        #     if client_connections.get(client_addr, False):
+        #         for message in client_messages:
+        #             server.sendto(message, client_addr)
+        '''
+        x = server.recvfrom(65507)
+        clientip = x[1][0]
+        data = x[0]
+        data = pickle.loads(data)
+        data = cv2.imdecode(data,cv2.IMREAD_COLOR)
+        cv2.imshow('name2',data)
+        if cv2.waitKey(10) == 13:
+            break
+
 start_server()
