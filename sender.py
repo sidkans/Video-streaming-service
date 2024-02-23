@@ -5,50 +5,61 @@ import pickle
 import time
 
 #constants
-HOST = socket.gethostname()
-HOST_IP = socket.gethostbyname(HOST)
+HOST_IP = ["192.168.252.84","192.168.252.240"]
+CLIENT_NAME = socket.gethostname()
 PORT = 8080
 ADDR = (HOST_IP,PORT)
 FORMAT = "utf-8"
-PAYLOAD_SIZE = 2048
+WIDTH = 640
+HEIGHT = 400
+PAYLOAD_SIZE = 1024
 
 
-#server
-def start_server():
-    
-    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
-    print(f"[SERVER]\nHOST:{HOST}\nHOST IP:{HOST_IP}\n\n")
-    
+
+# sender
+def close_sender(client_socket):
     try:
-        # server.bind(ADDR)
-        print("[BIND] Success!\n")
+        # Send a termination message to the server
+        client_socket.sendall(b'', ADDR)
     except socket.error as err:
-        print(str(err))
-        return
-    
+        print(f"[ERROR] Failed to send termination message: {err}")
+    finally:
+        # Close the socket
+        client_socket.close()
+
+
+# client
+def run_sender():
+    sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print(f"[CLIENT]\nHOST IP:{HOST_IP}\n\n")
+
+    print(f"[CAMERA] Turning on Camera...") 
+    # cam = cv2.VideoCapture("shravan.mp4")
     cam = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+    
+
     try:
         while cam.isOpened():
             ret,photo = cam.read()
-            cv2.imshow('SERVER',photo)
+            cv2.imshow('sender',photo)
             ret, buffer= cv2.imencode(".jpg",photo,[int(cv2.IMWRITE_JPEG_QUALITY),30])
             x_bytes = pickle.dumps(buffer)
-            server.sendto(x_bytes,ADDR)
+            for i in range(2):
+                sender.sendto(x_bytes,(HOST_IP[i],PORT))
             if cv2.waitKey(10) == 13:
-                print("[STREAM] Stream is ending ...")
+                print("[END] Stream is closing...")
                 time.sleep(2)
                 break
-    
-    except Warning:
-        pass
+            pass
 
     finally:
-        # Release the camera and destroy all windows 
+        # Release the camera and destroy all windows here
+        
         cam.release()
         cv2.destroyAllWindows()
-        print(f"[TERMINATING] SERVER IS CLOSING !")
-        time.sleep(1)
+        print("[TERMINATING] Sender is closing ")
+        time.sleep(1.5)
 
-    server.close()
+    sender.close()
 
-start_server()
+run_sender()
