@@ -7,15 +7,22 @@ import struct
 
 #constants
 HOST = socket.gethostname()
-HOST_IP = "192.168.252.240"
+HOST_IP = socket.gethostbyname(socket.gethostname())
 PORT = 8080
 ADDR = (HOST_IP,PORT)
 FORMAT = "utf-8"
 PAYLOAD_SIZE = 2048
 
+def sendIP():
+    tcpcon = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcpcon.connect((HOST,PORT))
+    my_ip = socket.gethostbyname(socket.gethostname())
+    tcpcon.send(my_ip.encode(FORMAT))
+    tcpcon.close()
 
 #receive
 def run_receiver():
+    # sendIP()
     receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
     print(f"[SERVER]\nHOST:{HOST}\nHOST IP:{HOST_IP}\n\n")
     
