@@ -2,29 +2,19 @@
 import socket
 import cv2
 import pickle
-import time
-import struct
 
 #constants
-HOST = socket.gethostname()
-HOST_IP = socket.gethostbyname(socket.gethostname())
+RECV = socket.gethostname()
+RECV_IP = socket.gethostbyname(socket.gethostname())
 PORT = 8080
-ADDR = (HOST_IP,PORT)
+ADDR = (RECV_IP,PORT)
 FORMAT = "utf-8"
 PAYLOAD_SIZE = 2048
 
-def sendIP():
-    tcpcon = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcpcon.connect((HOST,PORT))
-    my_ip = socket.gethostbyname(socket.gethostname())
-    tcpcon.send(my_ip.encode(FORMAT))
-    tcpcon.close()
-
 #receive
 def run_receiver():
-    # sendIP()
     receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
-    print(f"[SERVER]\nHOST:{HOST}\nHOST IP:{HOST_IP}\n\n")
+    print(f"[SERVER]\nRECEIVER:{RECV}\nRECEIVER IP:{RECV_IP}\n\n")
     
     try:
         receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,  1)
@@ -45,7 +35,7 @@ def run_receiver():
             data = x[0]
             data = pickle.loads(data)
             data = cv2.imdecode(data,cv2.IMREAD_COLOR)
-            cv2.imshow(f'{HOST}',data)
+            cv2.imshow(f'{RECV}',data)
             if cv2.waitKey(10) == 13:
                 cv2.destroyAllWindows()
                 break
@@ -55,4 +45,3 @@ def run_receiver():
             pass
 
 run_receiver()
-#12
