@@ -32,6 +32,7 @@ def run_sender():
 
         print(f"[CAMERA] Turning on Camera...") 
         cam = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+        #cam = cv2.VideoCapture("<filename>.mp4")
         
         
         try:
@@ -40,7 +41,7 @@ def run_sender():
                 cv2.imshow('sender',photo)
                 ret, buffer= cv2.imencode(".jpg",photo,[int(cv2.IMWRITE_JPEG_QUALITY),30])
                 x_bytes = pickle.dumps(buffer)
-                for i in range(5):
+                for i in range(len(RECV_IP_LIST)):
                     sender.sendto(x_bytes,(RECV_IP_LIST[i],PORT))
                 if cv2.waitKey(10) == 13:
                     print("[END] Stream is closing...")
